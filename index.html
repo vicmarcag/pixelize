@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Víctor Martínez-Cagigal">
+    <title>Pixelize</title>
+
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.2.0/css/bootstrap-colorpicker.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+    <script src="assets/js/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.2.0/js/bootstrap-colorpicker.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script src="pixelize.js"></script>
+    
+    <style>
+        body, html {
+            height: 100%;
+            background: linear-gradient(45deg, #ebedee, #fdfbfb);
+        }
+        .container {
+            ax-width: 960px;
+        }
+        .image-container {
+            height: 100%;
+            background: blue;
+        }
+        #result-img {
+            max-width: 100%;
+        }
+        canvas, img {
+            image-rendering: optimizeSpeed;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+            border: 3px solid #ddd;
+        }
+        .color-picker {
+            margin-bottom: 6px; 
+        }
+        #result-canvas {
+            width: 300px;
+            height: 400px;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+        <div class="py-5 text-center">
+            <h2>Pixelize Image</h2>
+            <p class="lead">This JavaScript applet allows to pixelize any image with custom palette using dithering-based algorithms</p>
+        </div>
+        <div class="row g-5">
+            <div class="col-md-5 col-lg-4">
+                <h4 class="mb-3">Parameters</h4>
+                <form class="pizelixe-form needs-validation">
+                    <!-- Input image -->
+                    <label for="inputImage" class="form-label">Upload image</label>
+                    <input type="file" class="form-control" id="inputImage" required>
+                    <div class="invalid-feedback">
+                        Please upload an image.
+                    </div>
+
+                    <label for="inputMaxSize" class="form-label mt-3">Max. number of pixels</label>
+                    <input min="1" type="number" class="form-control" id="inputMaxSize" value="80" required>
+                    <!-- TODO: validate max depending on image size -->
+
+                    <label for="colorInputs" class="form-label mt-3">Color palette</label>
+                    <div id="colorInputs">
+
+                        <!-- Color item -->
+                        <div class="form-group row color-picker-row">
+                          <div class="col-10">
+                            <div class="input-group color-picker" data-color="rgb(0, 0, 0)">
+                                <input type="text" class="form-control input-lg color-picker-value"/>
+                                <span class="input-group-append">
+                                    <span class="input-group-text colorpicker-input-addon h-100"><i></i></span>
+                                </span>
+                            </div>
+                          </div>
+                          <div class="col-2" style="padding-left:0;">
+                            <button type="button" class="btn btn-danger remove-color w-100">
+                                <i class="bi-x"></i>
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <!-- Color item -->
+                        <div class="form-group row color-picker-row">
+                            <div class="col-10">
+                              <div class="input-group color-picker" data-color="rgb(255, 255, 255)">
+                                  <input type="text" class="form-control input-lg color-picker-value"/>
+                                  <span class="input-group-append">
+                                      <span class="input-group-text colorpicker-input-addon h-100"><i></i></span>
+                                  </span>
+                              </div>
+                            </div>
+                            <div class="col-2" style="padding-left:0;">
+                              <button type="button" class="btn btn-danger remove-color w-100">
+                                  <i class="bi-x"></i>
+                              </button>
+                            </div>
+                        </div>
+
+                        <!-- Color item -->
+                        <div class="form-group row color-picker-row">
+                            <div class="col-10">
+                              <div class="input-group color-picker" data-color="rgb(255, 0, 0)">
+                                  <input type="text" class="form-control input-lg color-picker-value"/>
+                                  <span class="input-group-append">
+                                      <span class="input-group-text colorpicker-input-addon h-100"><i></i></span>
+                                  </span>
+                              </div>
+                            </div>
+                            <div class="col-2" style="padding-left:0;">
+                              <button type="button" class="btn btn-danger remove-color w-100">
+                                  <i class="bi-x"></i>
+                              </button>
+                            </div>
+                        </div>
+
+                        <!-- Color item -->
+                        <div class="form-group row color-picker-row">
+                            <div class="col-10">
+                              <div class="input-group color-picker" data-color="rgb(0, 255, 0)">
+                                  <input type="text" class="form-control input-lg color-picker-value"/>
+                                  <span class="input-group-append">
+                                      <span class="input-group-text colorpicker-input-addon h-100"><i></i></span>
+                                  </span>
+                              </div>
+                            </div>
+                            <div class="col-2" style="padding-left:0;">
+                              <button type="button" class="btn btn-danger remove-color w-100">
+                                  <i class="bi-x"></i>
+                              </button>
+                            </div>
+                        </div>
+
+                        <!-- Color item -->
+                        <div class="form-group row color-picker-row">
+                            <div class="col-10">
+                              <div class="input-group color-picker" data-color="rgb(0, 0, 255)">
+                                  <input type="text" class="form-control input-lg color-picker-value"/>
+                                  <span class="input-group-append">
+                                      <span class="input-group-text colorpicker-input-addon h-100"><i></i></span>
+                                  </span>
+                              </div>
+                            </div>
+                            <div class="col-2" style="padding-left:0;">
+                              <button type="button" class="btn btn-danger remove-color w-100">
+                                  <i class="bi-x"></i>
+                              </button>
+                            </div>
+                        </div>
+
+                        <!-- Color item -->
+                        <div class="form-group row color-picker-row">
+                            <div class="col-10">
+                              <div class="input-group color-picker" data-color="rgb(255, 255, 0)">
+                                  <input type="text" class="form-control input-lg color-picker-value"/>
+                                  <span class="input-group-append">
+                                      <span class="input-group-text colorpicker-input-addon h-100"><i></i></span>
+                                  </span>
+                              </div>
+                            </div>
+                            <div class="col-2" style="padding-left:0;">
+                              <button type="button" class="btn btn-danger remove-color w-100">
+                                  <i class="bi-x"></i>
+                              </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <button type="button" class="btn btn-outline-success w-100" id="addColor">
+                        <i class="bi bi-plus-square"></i>&nbsp;
+                        Add Color
+                    </button>
+                 
+                    <button class="w-100 btn btn-primary btn-lg mt-3" type="submit">Pixelize!</button>
+                </form>
+            </div>
+            <div class="col-md-7 col-lg-8">
+                <h4 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-primary">Result image </span>
+                </h4>
+                <div id="no-image-div">
+                    <p id="result-msg">No image yet. Load an image and click on "Pixelize!"</p>
+                </div>
+                <div id="result" class="image-container">
+                    <canvas id="result-canvas">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var image = null;
+        var imageLoaded = false;
+
+        $(document).ready(function() {
+            $('#no-image-div').css('display', 'block');
+            $('#result').css('display', 'none');
+        });
+
+        $(".pizelixe-form").on('submit', function() {
+            event.preventDefault(); 
+
+            // Get parameters
+            console.log("> Adquired parameters:");
+            var imgFile = $('#inputImage').prop('files')[0];
+            console.log("> File: ".concat(imgFile));
+            var maxSize = $('#inputMaxSize').val();
+            console.log("> Max. size: ".concat(maxSize, " px"));
+            var colors = [];
+            $('.color-picker').each(function() {
+                var rgbString = $(this).data().colorpicker.getValue();
+                var rgbStringArray = rgbString.substring(4,rgbString.length-1).split(', ');
+                var rgb = [];
+                for (var s of rgbStringArray) {
+                    rgb.push(parseInt(s));
+                }
+                colors.push(rgb);
+            })
+            console.log("> Color palette: ".concat(colors.toString()));
+            
+            // Initialize image element
+            image = new Image();
+            
+            // Event listener for when the image is loaded
+            image.onload = function() {
+                // Get canvas element
+                const canvas = document.getElementById('result-canvas');
+                
+                // Set canvas dimensions to match image
+                resizeCanvas(this);
+                
+                // Draw the image onto the canvas
+                var pixelImg = new PixelImage(image, canvas);
+                pixelImg.setPalette(colors);
+                pixelImg.pixelize(maxSize);
+                pixelImg.showPixelizedImage();
+            }
+            // Set the source of the image to the file object
+            image.src = URL.createObjectURL(imgFile);      
+            
+            // Hide the message and show the result
+            $('#no-image-div').css('display', 'none');
+            $('#result').css('display', 'block ');
+
+            imageLoaded = true;
+        });
+
+        // Resize result
+        $(window).resize(function(){
+            if (imageLoaded) {
+                resizeCanvas(image);
+            }
+        });
+
+        function resizeCanvas(image) {
+            if (image.height >= image.width) {
+                $('#result-canvas').css('height', '100%');
+                var cw = $('#result-canvas').height() * image.width / image.height;
+                $('#result-canvas').css('width', cw);
+            } else {
+                $('#result-canvas').css('width', '100%');
+                var ch = $('#result-canvas').width() * image.height / image.width;
+                $('#result-canvas').css('height', ch);
+            }
+        }
+
+        // Initialize the color picker
+        $('.color-picker').colorpicker({
+            format: "rgb"
+        });
+
+        // Add color input
+        $('#addColor').click(function () {
+
+            $('#colorInputs').append(
+                '<!-- Color item -->' +
+                '<div class="form-group row color-picker-row">' +
+                '<div class="col-10">' +
+                '<div class="input-group color-picker" data-color="rgb(0,0,0)">'+
+                '<input type="text" class="form-control input-lg color-picker-value"/>'+
+                '<span class="input-group-append">'+
+                '<span class="input-group-text colorpicker-input-addon h-100"><i></i></span>'+
+                '</span>'+
+                '</div>'+
+                '</div>'+
+                '<div class="col-2" style="padding-left:0;">'+
+                '<button type="button" class="btn btn-danger remove-color w-100">'+
+                '<i class="bi-x"></i>'+
+                '</button>'+
+                '</div>'+
+                '</div>'
+            );
+
+            // Reinitialize the color picker for the newly added input
+            $('.color-picker').colorpicker({
+                format: "rgb"
+            });
+        });
+
+        // Remove color input
+        $(document).on('click', '.remove-color', function () {
+            $(this).closest('.color-picker-row').remove();
+        });
+
+    </script>
+  </body>
+</html>
