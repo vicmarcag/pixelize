@@ -6,15 +6,16 @@
     <meta name="description" content="">
     <meta name="author" content="Víctor Martínez-Cagigal">
     <title>Pixelize</title>
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
 
+    <!-- CSS -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.2.0/css/bootstrap-colorpicker.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-
+    <!-- Scripts -->
     <script src="assets/js/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/3.2.0/js/bootstrap-colorpicker.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     
@@ -25,15 +26,9 @@
             height: 100%;
             background: linear-gradient(45deg, #ebedee, #fdfbfb);
         }
-        .container {
-            ax-width: 960px;
-        }
         .image-container {
             height: 100%;
-            background: blue;
-        }
-        #result-img {
-            max-width: 100%;
+            max-height: 600px;
         }
         canvas, img {
             image-rendering: optimizeSpeed;
@@ -42,7 +37,6 @@
             image-rendering: optimize-contrast;
             image-rendering: pixelated;
             -ms-interpolation-mode: nearest-neighbor;
-            border: 3px solid #ddd;
         }
         .color-picker {
             margin-bottom: 6px; 
@@ -267,15 +261,18 @@
             }
         });
 
+        const MAX_CANVAS_HEIGHT = 700;
         function resizeCanvas(image) {
-            if (image.height >= image.width) {
-                $('#result-canvas').css('height', '100%');
-                var cw = $('#result-canvas').height() * image.width / image.height;
-                $('#result-canvas').css('width', cw);
-            } else {
-                $('#result-canvas').css('width', '100%');
-                var ch = $('#result-canvas').width() * image.height / image.width;
+            $('#result-canvas').css('width', '100%');
+            var ch = $('#result-canvas').width() * image.height / image.width;
+            if (ch < MAX_CANVAS_HEIGHT) {
                 $('#result-canvas').css('height', ch);
+            }
+            else {
+                ch = MAX_CANVAS_HEIGHT;
+                var cw = ch * image.width / image.height;
+                $('#result-canvas').css('height', ch);
+                $('#result-canvas').css('width', cw);
             }
         }
 
