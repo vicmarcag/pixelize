@@ -37,7 +37,7 @@ class PixelImage {
         this.canvasContext.putImageData(this.pixelImg, 0, 0);
     }
 
-    pixelize(approxMaxSize = 80) {
+    pixelize(approxMaxSize = 80, method = 'floyd-steinberg') {
         console.log("> Pixelizing...");
 
         // Get shape & downsampling block size
@@ -62,8 +62,14 @@ class PixelImage {
         // Dithering
         console.log("> Dithering...");
         const tempImgMatrix = this._convertToImageMatrix(tempImgArray, newHeight, newWidth);
-        const ditheredImg = this.dithering(tempImgMatrix);
-        console.log(ditheredImg);
+        if (method == 'floyd-steinberg') {
+            var ditheredImg = this.ditheringFloydSteinberg(tempImgMatrix);
+        } else if (method == 'atkinson') {
+            var ditheredImg = this.ditheringAtkinson(tempImgMatrix);
+        } else if (method == 'minimizedaverageerror') {
+            var ditheredImg = this.ditheringMAE(tempImgMatrix);
+        }
+
         // Convert to image data
         this.pixelImg = new ImageData(ditheredImg, newWidth, newHeight);
         console.log("> Done!");
@@ -76,7 +82,7 @@ class PixelImage {
     // This function performs dithering to an image dictionary with the following keys:
     //      data: 4D Uint8Array representing pixels' values
     //      shape: array of [height, width, 4]
-    dithering(matrixImg) {
+    ditheringFloydSteinberg(matrixImg) {
         // Initialization
         const h = matrixImg.length;
         const w = matrixImg[0].length;
@@ -100,6 +106,91 @@ class PixelImage {
                     if (ic + 1 < w) {
                         dimg[ir + 1][ic + 1] = dimg[ir + 1][ic + 1].map((val, index) => val + error[index] / 16);
                     }
+                }
+            }
+        }
+        return this._convertToImageArray(dimg);
+    }
+
+    ditheringAtkinson(matrixImg) {
+        // Initialization
+        const h = matrixImg.length;
+        const w = matrixImg[0].length;
+        const dimg = matrixImg;
+
+        // Atkinson algorithm
+        for (var ir = 0; ir < h; ir++) {
+            for (var ic = 0; ic < w; ic++) {
+                const oldPixel = dimg[ir][ic];
+                const newPixel = this._findClosestPaletteColor(oldPixel);
+                const error = oldPixel.map((val, index) => val - newPixel[index]);
+                dimg[ir][ic] = newPixel;
+                if (ic + 1 < w) {
+                    dimg[ir][ic + 1] = dimg[ir][ic + 1].map((val, index) => val + error[index] / 8);
+                    if (ic + 2 < w) {
+                        dimg[ir][ic + 2] = dimg[ir][ic + 2].map((val, index) => val + error[index] / 8);
+                    }
+                }
+                if (ir + 1 < h) {
+                    if (ic > 0) {
+                        dimg[ir + 1][ic - 1] = dimg[ir + 1][ic - 1].map((val, index) => val + error[index] / 8);
+                    }
+                    dimg[ir + 1][ic] = dimg[ir + 1][ic].map((val, index) => val + error[index] / 8);
+                    if (ic + 1 < w) {
+                        dimg[ir + 1][ic + 1] = dimg[ir + 1][ic + 1].map((val, index) => val + error[index] / 8);
+                    }
+                    if (ir + 2 < h) {
+                        dimg[ir + 2][ic] = dimg[ir + 2][ic].map((val, index) => val + error[index] / 8);
+                    }
+                }
+            }
+        }
+        return this._convertToImageArray(dimg);
+    }
+
+    ditheringMAE(matrixImg) {
+        // Initialization
+        const h = matrixImg.length;
+        const w = matrixImg[0].length;
+        const dimg = matrixImg;
+
+        // Minimized Average Error algorithm
+        for (var ir = 0; ir < h; ir++) {
+            for (var ic = 0; ic < w; ic++) {
+                const oldPixel = dimg[ir][ic];
+                const newPixel = this._findClosestPaletteColor(oldPixel);
+                const error = oldPixel.map((val, index) => val - newPixel[index]);
+                dimg[ir][ic] = newPixel;
+                // Current row
+                if (ic + 1 < w) {
+                    dimg[ir][ic + 1] = dimg[ir][ic + 1].map((val, index) => val + error[index] * 7 / 48);
+                    if (ic + 2 < w) {
+                        dimg[ir][ic + 2] = dimg[ir][ic + 2].map((val, index) => val + error[index] * 5 / 48);
+                    }
+                }
+                // Next row
+                if (ir + 1 < h) {
+                    if (ic > 0)
+                        dimg[ir + 1][ic - 1] = dimg[ir + 1][ic - 1].map((val, index) => val + error[index] * 5 / 48);
+                    if (ic > 1)
+                        dimg[ir + 1][ic - 2] = dimg[ir + 1][ic - 2].map((val, index) => val + error[index] * 3 / 48);
+                    dimg[ir + 1][ic] = dimg[ir + 1][ic].map((val, index) => val + error[index] * 7 / 48);
+                    if (ic + 1 < w)
+                        dimg[ir + 1][ic + 1] = dimg[ir + 1][ic + 1].map((val, index) => val + error[index] * 5 / 48);
+                    if (ic + 2 < w)
+                        dimg[ir + 1][ic + 2] = dimg[ir + 1][ic + 2].map((val, index) => val + error[index] * 3 / 48);
+                }
+                // Next+1 row
+                if (ir + 2 < h) {
+                    if (ic > 0)
+                        dimg[ir + 2][ic - 1] = dimg[ir + 2][ic - 1].map((val, index) => val + error[index] * 3 / 48);
+                    if (ic > 1)
+                        dimg[ir + 2][ic - 2] = dimg[ir + 2][ic - 2].map((val, index) => val + error[index] * 1 / 48);
+                    dimg[ir + 2][ic] = dimg[ir + 2][ic].map((val, index) => val + error[index] * 5 / 48);
+                    if (ic + 1 < w)
+                        dimg[ir + 2][ic + 1] = dimg[ir + 2][ic + 1].map((val, index) => val + error[index] * 3 / 48);
+                    if (ic + 2 < w)
+                        dimg[ir + 2][ic + 2] = dimg[ir + 2][ic + 2].map((val, index) => val + error[index] * 1 / 48);
                 }
             }
         }

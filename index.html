@@ -67,6 +67,13 @@
                     <label for="inputMaxSize" class="form-label mt-3">Max. number of pixels</label>
                     <input min="1" type="number" class="form-control" id="inputMaxSize" value="80" required>
                     <!-- TODO: validate max depending on image size -->
+                    
+                    <label for="inputMethod" class="form-label mt-3">Dithering method</label>
+                    <select id="inputMethod" class="form-select" aria-label="Default select example">
+                        <option value="floyd-steinberg" selected>Floyd-Steinberg</option>
+                        <option value="atkinson">Atkinson</option>
+                        <option value="minimizedaverageerror">Minimized Average Error</option>
+                    </select>
 
                     <label for="colorInputs" class="form-label mt-3">Color palette</label>
                     <div id="colorInputs">
@@ -215,6 +222,8 @@
             console.log("> File: ".concat(imgFile));
             var maxSize = $('#inputMaxSize').val();
             console.log("> Max. size: ".concat(maxSize, " px"));
+            var method = $('#inputMethod').val();
+            console.log("> Method: ".concat(method));
             var colors = [];
             $('.color-picker').each(function() {
                 var rgbString = $(this).data().colorpicker.getValue();
@@ -241,7 +250,7 @@
                 // Draw the image onto the canvas
                 var pixelImg = new PixelImage(image, canvas);
                 pixelImg.setPalette(colors);
-                pixelImg.pixelize(maxSize);
+                pixelImg.pixelize(maxSize, method);
                 pixelImg.showPixelizedImage();
             }
             // Set the source of the image to the file object
