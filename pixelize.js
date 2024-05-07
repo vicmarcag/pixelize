@@ -3,9 +3,6 @@ class PixelImage {
         this.originalImg = imageObject;
         this.canvas = canvas;
         this.canvasContext = canvas.getContext('2d');
-        /*context.drawImage(imageObject, 0, 0);
-        console.log(typeof(imageObject));
-        console.log(imageObject);*/
 
         this.pixelImg = null;
         this.palette = [
@@ -54,14 +51,11 @@ class PixelImage {
         this.canvas.height = newHeight;
         this.canvasContext.drawImage(this.originalImg, 0, 0, newWidth, newHeight);
         var tempImgData = this.canvasContext.getImageData(0, 0, newWidth, newHeight);
-        
         const tempImgArray = new Uint8Array(tempImgData.data);
-
-        //const tempImg = {data: tempImgArray, shape: [newHeight, newWidth, 4]};
 
         // Dithering
         console.log("> Dithering...");
-        const tempImgMatrix = this._convertToImageMatrix(tempImgArray, newHeight, newWidth);
+        const tempImgMatrix = convertToImageMatrix(tempImgArray, newHeight, newWidth); // h x w x 3
         if (method == 'floyd-steinberg') {
             var ditheredImg = this.ditheringFloydSteinberg(tempImgMatrix);
         } else if (method == 'atkinson') {
@@ -81,7 +75,7 @@ class PixelImage {
 
     // This function performs dithering to an image dictionary with the following keys:
     //      data: 4D Uint8Array representing pixels' values
-    //      shape: array of [height, width, 4]
+    //      shape: array of [height, width, 3]
     ditheringFloydSteinberg(matrixImg) {
         // Initialization
         const h = matrixImg.length;
@@ -109,7 +103,7 @@ class PixelImage {
                 }
             }
         }
-        return this._convertToImageArray(dimg);
+        return convertToImageArray(dimg);
     }
 
     ditheringAtkinson(matrixImg) {
@@ -145,7 +139,7 @@ class PixelImage {
                 }
             }
         }
-        return this._convertToImageArray(dimg);
+        return convertToImageArray(dimg);
     }
 
     ditheringMAE(matrixImg) {
@@ -194,52 +188,7 @@ class PixelImage {
                 }
             }
         }
-        return this._convertToImageArray(dimg);
-    }
-
-    _convertToImageMatrix(flattenedArr, newHeight, newWidth) {
-        // flattenedArr with dimensions [1 x w*h*4], 4D representing RGBA (0-255)
-        // returns array with dimensions [h x w x 3] (ignoring alpha channel)
-        if (newWidth * newHeight * 4 != flattenedArr.length) {
-            console.log("[error in _convertToImageMatrix()] Dimensions does not match!");
-            return;
-        }
-        var index = 0;
-        let reshapedArray = [];
-        for (var h = 0; h < newHeight; h++) {
-            let row = [];
-            for (var w = 0; w < newWidth; w++) {
-                let pixel = [];
-                for (var k = 0; k < 3; k++) {
-                    pixel.push(flattenedArr[index]);
-                    index++;
-                }
-                index++;
-                row.push(pixel);
-            }
-            reshapedArray.push(row);
-        }
-        return reshapedArray;
-    }
-
-    _convertToImageArray(arr) {
-        // array with dimensions [h x w x 3] (ignoring alpha channel)
-        // returns flattened array with dimensions [1 x w*h*4], 4D representing RGBA (0-255)
-        const width = arr.length;
-        const height = arr[0].length;
-        var imgArray = new Array(width * height * 4);
-        var counter = 0;
-        for (var i = 0; i < width; i++) {
-            for (var j = 0; j < height; j++) {
-                for (var k = 0; k < 3; k++) {
-                    imgArray[counter] = arr[i][j][k];
-                    counter++;
-                }
-                imgArray[counter] = 255;
-                counter++;
-            }
-        }
-        return Uint8ClampedArray.from(imgArray);
+        return convertToImageArray(dimg);
     }
 
     _findClosestPaletteColor(pixel) {
@@ -254,4 +203,50 @@ class PixelImage {
         }
         return closestColor;
     }
+}
+
+function convertToImageMatrix(flattenedArr, newHeight, newWidth) {
+    // flattenedArr with dimensions [1 x w*h*4], 4D representing RGBA (0-255)
+    // returns array with dimensions [h x w x 3] (ignoring alpha channel)
+    if (newWidth * newHeight * 4 != flattenedArr.length) {
+        console.log("[error in convertToImageMatrix()] Dimensions does not match!");
+        console.log("width: ".concat(newWidth, ", height: ", newHeight, ", array dims: ", flattenedArr.length));
+        return;
+    }
+    var index = 0;
+    let reshapedArray = [];
+    for (var h = 0; h < newHeight; h++) {
+        let row = [];
+        for (var w = 0; w < newWidth; w++) {
+            let pixel = [];
+            for (var k = 0; k < 3; k++) {
+                pixel.push(flattenedArr[index]);
+                index++;
+            }
+            index++;
+            row.push(pixel);
+        }
+        reshapedArray.push(row);
+    }
+    return reshapedArray;
+}
+
+function convertToImageArray(arr) {
+    // array with dimensions [h x w x 3] (ignoring alpha channel)
+    // returns flattened array with dimensions [1 x w*h*4], 4D representing RGBA (0-255)
+    const width = arr.length;
+    const height = arr[0].length;
+    var imgArray = new Array(width * height * 4);
+    var counter = 0;
+    for (var i = 0; i < width; i++) {
+        for (var j = 0; j < height; j++) {
+            for (var k = 0; k < 3; k++) {
+                imgArray[counter] = arr[i][j][k];
+                counter++;
+            }
+            imgArray[counter] = 255;
+            counter++;
+        }
+    }
+    return Uint8ClampedArray.from(imgArray);
 }

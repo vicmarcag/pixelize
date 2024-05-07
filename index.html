@@ -185,8 +185,15 @@
                         <i class="bi bi-plus-square"></i>&nbsp;
                         Add Color
                     </button>
-                 
+
                     <button class="w-100 btn btn-primary btn-lg mt-3" type="submit">Pixelize!</button>
+
+                    <div id="downloadPanel">
+                        <button type="button" class="btn btn-warning w-100 mt-1" id="downloadImage">
+                                <i class="bi bi-box-arrow-down w-50"></i>&nbsp;
+                                Download image
+                        </button>
+                    </div>
                 </form>
             </div>
             <div class="col-md-7 col-lg-8">
@@ -197,8 +204,7 @@
                     <p id="result-msg">No image yet. Load an image and click on "Pixelize!"</p>
                 </div>
                 <div id="result" class="image-container">
-                    <canvas id="result-canvas">
-                    </canvas>
+                    <canvas id="result-canvas"></canvas>
                 </div>
             </div>
         </div>
@@ -211,6 +217,7 @@
         $(document).ready(function() {
             $('#no-image-div').css('display', 'block');
             $('#result').css('display', 'none');
+            $('#downloadPanel').css('visibility', 'hidden');
         });
 
         $(".pizelixe-form").on('submit', function() {
@@ -258,19 +265,19 @@
             
             // Hide the message and show the result
             $('#no-image-div').css('display', 'none');
-            $('#result').css('display', 'block ');
+            $('#result').css('display', 'block');
+            $('#downloadPanel').css('visibility', 'visible');
 
             imageLoaded = true;
         });
 
         // Resize result
+        const MAX_CANVAS_HEIGHT = 700;
         $(window).resize(function(){
             if (imageLoaded) {
                 resizeCanvas(image);
             }
         });
-
-        const MAX_CANVAS_HEIGHT = 700;
         function resizeCanvas(image) {
             $('#result-canvas').css('width', '100%');
             var ch = $('#result-canvas').width() * image.height / image.width;
@@ -322,6 +329,60 @@
         $(document).on('click', '.remove-color', function () {
             $(this).closest('.color-picker-row').remove();
         });
+
+        // Download image
+        $('#downloadImage').click(function () {
+            console.log("> Download requested...");
+
+            // Compute output size
+            const APPROX_SIZE = 1000;
+            var currW = $('#result-canvas').get(0).width;
+            var currH = $('#result-canvas').get(0).height;
+            var pxRes = Math.round(APPROX_SIZE / Math.max(currW, currH));
+            console.log("  - Original dims: ".concat(currW, "x", currH));
+
+            // Upscale
+            console.log("  - Upscaling to: ".concat(pxRes*currW, "x", pxRes*currH, " (scale of ", pxRes, ")"));
+            canvasContext = $('#result-canvas').get(0).getContext('2d');
+            var tempImgData = canvasContext.getImageData(0, 0, currW, currH);
+            var imgData = new Uint8Array(tempImgData.data);
+            var imgData = convertToImageMatrix(imgData, currH, currW);
+            var imgDataUpscaled = upscaleImage(imgData, pxRes);
+
+            var arrayDataUpscaled = convertToImageArray(imgDataUpscaled);
+            var upscaledImg = new ImageData(arrayDataUpscaled, pxRes * currW, pxRes * currH);
+            var c = document.createElement('canvas');
+            c.width = pxRes * currW;
+            c.height = pxRes * currH;
+            c.getContext('2d').putImageData(upscaledImg, 0, 0);
+
+            // Download
+            var link = document.createElement('a');
+            link.download = 'pixelized_image.png';
+            link.href = c.toDataURL();
+            link.click();
+        });
+
+        function upscaleImage(array, scaleFactor) {
+            // imgData dims [h x w x 3] 
+            const height = array.length;
+            const width = array[0].length;
+            const channels = array[0][0].length;
+
+            const upscaledArray = new Array(height * scaleFactor);
+            for (let i = 0; i < height * scaleFactor; i++) {
+                upscaledArray[i] = new Array(width * scaleFactor);
+                for (let j = 0; j < width * scaleFactor; j++) {
+                    upscaledArray[i][j] = new Array(channels);
+                    const originalI = Math.floor(i / scaleFactor);
+                    const originalJ = Math.floor(j / scaleFactor);
+                    for (let k = 0; k < channels; k++) {
+                        upscaledArray[i][j][k] = array[originalI][originalJ][k];
+                    }
+                }
+            }
+            return upscaledArray;
+        }
 
     </script>
   </body>
