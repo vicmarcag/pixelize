@@ -59,10 +59,7 @@
                 <form class="pizelixe-form needs-validation">
                     <!-- Input image -->
                     <label for="inputImage" class="form-label">Upload image</label>
-                    <input type="file" class="form-control" id="inputImage" required>
-                    <div class="invalid-feedback">
-                        Please upload an image.
-                    </div>
+                    <input type="file" class="form-control" id="inputImage" accept="image/png, image/gif, image/jpeg" required>
 
                     <label for="inputMaxSize" class="form-label mt-3">Max. number of pixels</label>
                     <input min="1" type="number" class="form-control" id="inputMaxSize" value="80" required>
