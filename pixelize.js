@@ -29,8 +29,6 @@ class PixelImage {
             console.log("[show error] Call pixelize() first!");
             return;
         }
-        const height = this.pixelImg.height;
-        const width = this.pixelImg.width;
         this.canvasContext.putImageData(this.pixelImg, 0, 0);
     }
 
