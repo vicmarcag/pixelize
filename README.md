@@ -24,13 +24,13 @@ Original             |  Pixelized
 <img src="https://github.com/vicmarcag/pixelize/blob/main/examples/maul.png" width="200"> | <img src="https://github.com/vicmarcag/pixelize/blob/main/examples/maul_output.png" width="200">
 
 ## ⚙️ Installation
-To use the Image Pixelizer Applet in your local server, clone the repository and open the index.html file in your browser:
+To use the Image Pixelizer Applet in your local server, clone the repository and open the `index.html` file in your browser:
 ```
 git clone https://github.com/yourusername/image-pixelizer-applet.git
 ```
 
 ## 🤝 Contributing
-We welcome contributions! If you have ideas for new features, improvements, or bug fixes, please open an issue or submit a pull request.
+I welcome contributions! If you have ideas for new features, improvements, or bug fixes, please open an issue or submit a pull request.
 
 ## 📜 License
 This project is licensed under the MIT License. See the LICENSE file for details.
