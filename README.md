@@ -17,6 +17,12 @@ Welcome to the Image Pixelizer Applet! This JavaScript applet allows you to tran
 ## 🖼️ Examples
 Here are some examples of what you can achieve with the Image Pixelizer Applet:
 
+Original             |  Pixelized
+:-------------------------:|:-------------------------:
+<img src="https://github.com/vicmarcag/pixelize/blob/main/examples/pearl.png" width="200"> | <img src="https://github.com/vicmarcag/pixelize/blob/main/examples/pearl_output.png" width="200">
+<img src="https://github.com/vicmarcag/pixelize/blob/main/examples/mona.png" width="200"> | <img src="https://github.com/vicmarcag/pixelize/blob/main/examples/mona_output.png" width="200"> 
+<img src="https://github.com/vicmarcag/pixelize/blob/main/examples/maul.png" width="200"> | <img src="https://github.com/vicmarcag/pixelize/blob/main/examples/maul_output.png" width="200">
+
 ## ⚙️ Installation
 To use the Image Pixelizer Applet in your local server, clone the repository and open the index.html file in your browser:
 ```
